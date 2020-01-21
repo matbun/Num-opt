@@ -2,59 +2,46 @@ clear
 close all
 clc
 
-a = 2e3;
-n = 1e6;
 m = 1;
-c = ones(n,1);
-c(1:2:end) = a;
-A = ones(m,n);
-b = ones(m,1);
 
-e = ones(n,1);
+maxiter = 1000;
+epsilon = 1e-16;
 
-[x, lambda, s] = starting_point(A,b,c);
+n_iter = zeros(2,3);
+elapsed_t = zeros(2,3);
 
-I = speye(n);
-S = spdiags(s,0,n,n);
-X = spdiags(x,0,n,n);
+i = 1;
+for n = [1e4]
+    j = 1;
+    for a = [2 20 2e2 2e3]
+        
+        c = ones(n,1);
+        c(1:2:end) = a;
+        A = ones(m,n);
+        b = ones(m,1);
 
-AA = spalloc(2*n+m, 2*n+m, 5*n);
-AA(1:m, 1:n) = A;
-AA(m+1:m+n, n+1:m+n) = A';
-AA(m+1:m+n, m+n+1:m+2*n) = I;
-AA(m+n+1:m+2*n, 1:n) = S;
-AA(m+n+1:m+2*n, m+n+1:m+2*n) = X;
-
-%figure
-%spy(AA)
-%grid on
-
-% numero di condizionameto
-%condest(AA)
-
-%AA positive definite? No if p > 0
-%[~,p] = chol(AA)
-
-%is AA singular? no
-%sprank(AA)
-
-r = [b - A*x; c-s-A'*lambda; -X*S*e];
-d = AA\r;
-
-r_c = s+A'*lambda-c;
-r_b = A*x-b;
-r_xs = X*S*e;
-
-D = (inv(S)*X).^(1/2);
-K = A*D.^2*A';
-j = -r_b - A*X*inv(S)*r_c + A*inv(S)*r_xs;
-
-d_lambda = K\j
-
-d_s = -r_c -A'*d_lambda
-d_x = -inv(S)*r_xs - X*inv(S)*d_s
-
-
-for k = 0:maxiter
-    
+        %[x, lambda, s] = starting_point(A,b,c);
+        x = ones(n,1);
+        s = ones(n,1);
+        lambda = 1;
+        
+        tic
+        [~, iter] = predictor_corrector_lu(A,b,c,x,lambda,s,maxiter,epsilon);
+        
+        elapsed_t(i,j) = toc;
+        n_iter(i,j) = iter;
+        
+        j = j+1;
+    end 
+    i = i+1;
 end
+
+
+elapsed_t
+n_iter
+
+
+
+
+
+

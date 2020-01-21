@@ -149,13 +149,13 @@ Results using reduction of the jacobian.
 \pagebreak
 \subsection{Starting configuration c}
 To compute the starting point:
-\begin{itemize}
+\begin{enumerate}
 	\item $\tilde{x} = A^T(AA^T)^{-1}b$, $\tilde{\lambda} = (AA^T)^{-1}Ac$, $\tilde{s} = c-A^Ttilde{\lambda}$
 	\item $\delta_x=max(-1.5min\tilde{x_i},0)$, $\delta_s=max(-1.5min\tilde{s_i},0)$
 	\item $\hat{x} = \tilde{x} + \delta_xe$, $\hat{s} = \tilde{s} + \delta_se$
 	\item $\hat{\delta_x}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{s}}$, $\hat{\delta_s}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{x}}$
 	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
-\end{itemize}
+\end{enumerate}
 Results using LU factorization.\\
 \begin{figure}[h]
 	\includegraphics[width=12cm]{table4.png}
@@ -168,5 +168,11 @@ Results using reduction of the jacobian.
 \end{figure}
 \pagebreak
 \section{Comments}
-As we can see, the only difference between the two different approaches is the execution time. This is because the method is the same, I'm just using different ways of computing it...
+As we can see, the only difference between the two different approaches is the execution time. This is because the method is the same, I'm just using different ways of computing it...\\
+The worse is the starting point, the longer it takes to converge...\\
+Code?\\
+Quale epsilon (tolelranza) ho usato?\\
+Complessità dello starting point dato dal libro\\
+Aggiungi foto L, U già presenti nella cartella code. Eventualmente rifai i calcoli per misurare i tempi.\\
+La fattorizzazione che ho usato è A = LU ([L,U] = lu(A)) però L in queto modo non è una matrice triangolare. Devo usare PA = LU ([L,U,P] = lu(A)) che per matrici sparse diventa PAQ = LU ([L,U,P,Q] = lu(A)).\\
 \end{document}

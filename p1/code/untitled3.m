@@ -23,6 +23,11 @@ S = spdiags(s,0,n,n);
 AA(m+n+1:m+2*n, 1:n) = S;
 AA(m+n+1:m+2*n, m+n+1:m+2*n) = X;
 
-[L,U] = lu(AA);
+[L,U,P,Q] = lu(AA);
+
+figure
+spy(L)
+figure
+spy(U)
 
 

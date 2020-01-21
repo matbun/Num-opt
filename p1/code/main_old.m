@@ -2,8 +2,8 @@ clear
 close all
 clc
 
-a = 2;
-n = 5;
+a = 2e3;
+n = 1e6;
 m = 1;
 c = ones(n,1);
 c(1:2:end) = a;
@@ -33,17 +33,26 @@ AA(m+n+1:m+2*n, m+n+1:m+2*n) = X;
 %condest(AA)
 
 %AA positive definite? No if p > 0
-[~,p] = chol(AA)
+%[~,p] = chol(AA)
 
 %is AA singular? no
-sprank(AA)
+%sprank(AA)
 
 r = [b - A*x; c-s-A'*lambda; -X*S*e];
+d = AA\r;
 
-D = (inv(S)*X)^(-1/2);
-K = A*D^2*A';
-j = -c+s+A'*lambda - A*X*inv(S)*(A*x-b) + A*inv(S)*X*S*e;
-K\j
+r_c = s+A'*lambda-c;
+r_b = A*x-b;
+r_xs = X*S*e;
+
+D = (inv(S)*X).^(1/2);
+K = A*D.^2*A';
+j = -r_b - A*X*inv(S)*r_c + A*inv(S)*r_xs;
+
+d_lambda = K\j
+
+d_s = -r_c -A'*d_lambda
+d_x = -inv(S)*r_xs - X*inv(S)*d_s
 
 
 for k = 0:maxiter
