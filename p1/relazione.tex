@@ -1,7 +1,7 @@
 \documentclass[]{article}
 \usepackage{amsmath}
 \usepackage{graphicx}
-
+\usepackage{float}
 %opening
 \title{Assignment - Constrained optimization\\Interior Point Method applied to linear programming
 	problems}
@@ -111,15 +111,48 @@ $S$ is invertible for the same reason:
 \end{equation*}
 The matrix $AS^{-1}XA^T \in \Re^{mxm}$ is a real number, since in this case $m=1$. This makes the computation of the system trivial, avoiding the problem of working with singular or indefinite matrices.
 \section{Results}
-
+The reduction of the Jacobian was motivate by the unfeasibility of the problem when n gets very large (1M in this case), leading to a memory error.\\
+To solve the problem with a direct method suited for an indefinite non symmetric matrix I used the LU decomposition, which is slightly less time consuming than the Gaussian elimination and it doesn't need to be computed twice for each iteration (we have to solve two linear systems with the same coefficient matrix).\\\\
+What improved the performances, indeed, was the chosen starting point. We know that it's not necessary for the starting point to exactly fulfill all the first order optimality conditions, but just $x, s > 0$.\\
+I tried 3 starting configurations:
+\begin{enumerate}
+	\item [a.]$x=ones(n,1)$, $s=ones(n,1)$, $\lambda = 1$.
+	\item [b.]$x=100*ones(n,1)$, $s=100*ones(n,1)$,
+	 $\lambda = 100$.
+	 \item [c.] a method showed on the Nocedal Wright book to choose a good starting configuration.
+\end{enumerate} 
+\pagebreak
+\subsection{Starting configuration a}
+Results using LU factorization.\\
+\begin{figure*}[h]
+	\includegraphics[width=12cm]{table5.png}
+	\caption{Starting point of all ones.}
+\end{figure*}\\
+Results using reduction of the jacobian.
 \begin{figure*}[h]
 	\includegraphics[width=12cm]{table2.png}
 	\caption{Starting point of all ones.}
 \end{figure*}
+\pagebreak
+\subsection{Starting configuration b}
+Results using LU factorization.\\
+\begin{figure}[h]
+	\includegraphics[width=12cm]{table6.png}
+	\caption{Starting point of all 100.}
+\end{figure}\\
+Results using reduction of the jacobian.
 \begin{figure}[h]
 	\includegraphics[width=12cm]{table3.png}
 	\caption{Starting point of all 100.}
 \end{figure}
+\pagebreak
+\subsection{Starting configuration c}
+Results using LU factorization.\\
+\begin{figure}[h]
+	\includegraphics[width=12cm]{table4.png}
+	\caption{Starting point as suggested on the book.}
+\end{figure}\\
+Results using reduction of the jacobian.
 \begin{figure}[h]
 	\includegraphics[width=12cm]{table1.png}
 	\caption{Starting point as suggested on the book.}
