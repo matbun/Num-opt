@@ -51,6 +51,7 @@ S_k & 0 & X_k
 \\
 Where $X_k=diag(x_k)$ and $S_k=diag(s_k)$.\\
 Interior point methods are variants of Newton method that guarantee that each iterate $(x_k, \lambda_k, s_k)$ satisfy the constraint $x, s\geq0$.
+\pagebreak
 \section{Problem data}
 $A=(1, \dots 1)\in \Re^{1*n}$, \\
 $b = 1$,\\
@@ -147,6 +148,14 @@ Results using reduction of the jacobian.
 \end{figure}
 \pagebreak
 \subsection{Starting configuration c}
+To compute the starting point:
+\begin{itemize}
+	\item $\tilde{x} = A^T(AA^T)^{-1}b$, $\tilde{\lambda} = (AA^T)^{-1}Ac$, $\tilde{s} = c-A^Ttilde{\lambda}$
+	\item $\delta_x=max(-1.5min\tilde{x_i},0)$, $\delta_s=max(-1.5min\tilde{s_i},0)$
+	\item $\hat{x} = \tilde{x} + \delta_xe$, $\hat{s} = \tilde{s} + \delta_se$
+	\item $\hat{\delta_x}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{s}}$, $\hat{\delta_s}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{x}}$
+	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
+\end{itemize}
 Results using LU factorization.\\
 \begin{figure}[h]
 	\includegraphics[width=12cm]{table4.png}
@@ -154,9 +163,10 @@ Results using LU factorization.\\
 \end{figure}\\
 Results using reduction of the jacobian.
 \begin{figure}[h]
-	\includegraphics[width=12cm]{table1.png}
+	\includegraphics[width=10cm]{table1.png}
 	\caption{Starting point as suggested on the book.}
 \end{figure}
-
-
+\pagebreak
+\section{Comments}
+As we can see, the only difference between the two different approaches is the execution time. This is because the method is the same, I'm just using different ways of computing it...
 \end{document}
