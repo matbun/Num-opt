@@ -11,7 +11,7 @@ n_iter = zeros(2,3);
 elapsed_t = zeros(2,3);
 
 i = 1;
-for n = [1e4 1e6]
+for n = [1e4]
     j = 1;
     for a = [2 20 2e2 2e3]
         
@@ -21,12 +21,12 @@ for n = [1e4 1e6]
         b = ones(m,1);
 
         %[x, lambda, s] = starting_point(A,b,c);
-        x = 100*ones(n,1);
-        s = 100*ones(n,1);
-        lambda = 100;
+        x = ones(n,1);
+        s = ones(n,1);
+        lambda = 1;
         
         tic
-        [~, iter] = predictor_corrector(A,b,c,x,lambda,s,maxiter,epsilon);
+        [~, iter] = predictor_corrector_lu(A,b,c,x,lambda,s,maxiter,epsilon);
         
         elapsed_t(i,j) = toc;
         n_iter(i,j) = iter;
