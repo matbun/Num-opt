@@ -65,7 +65,7 @@ After having built the sparse jacobian of F, using the command spy() it's possib
 
 Using the command [R,p] = chol(J) it's possible to notice, thanks to the value of p, that the matrix isn't positive definite. Hence I could not use: gradient method, conjugate gradient or Cholesky decomposition.\\
 Since this matrix isn't symmetric, I didn't use the LDL decomposition neither.\\\\
-Analyzing the structure of the block matrix, I could notice that it's possible to make some reductions, rewriting the left hand part in a more compact way:
+Analyzing the structure of the block matrix, we can notice that it's possible to make some reductions. Rewriting the left hand part in a more compact way:
 \begin{equation*}
 \begin{pmatrix}
 A & 0 & 0 \\[0.3em]
@@ -85,7 +85,7 @@ r_b \\[0.3em]
 r_c         
 \end{pmatrix}
 \end{equation*}
-Since $X$ is invertible ($x > 0$ is guarateed by the IPM):
+Since $X$ is invertible ($x > 0$ is guarateed by the IPM), multiplying $-X^{-1}$:
 \begin{equation*}
 	\begin{pmatrix}
 	A & 0\\
