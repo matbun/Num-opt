@@ -4,7 +4,7 @@ m = size(A,1);
 
 e = ones(n,1);
 
-gamma = 0.9995;
+gamma = 0.99995;
 
 mu = x'*s/n;
 mu_0 = mu;

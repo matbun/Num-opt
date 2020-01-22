@@ -21,8 +21,8 @@ for n = [1e4]
         b = ones(m,1);
 
         %[x, lambda, s] = starting_point(A,b,c);
-        x = ones(n,1);
-        s = ones(n,1);
+        x = 100*ones(n,1);
+        s = 100*ones(n,1);
         lambda = 1;
         
         tic

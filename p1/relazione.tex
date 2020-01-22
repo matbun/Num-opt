@@ -214,7 +214,7 @@ To compute the starting point:
 	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
 \end{enumerate}
 For all the results reported below, in the stopping criterion I used $\epsilon=10^{-16}$.\\\\
-When updating $x_k$, $\lambda_k$, $s_k$ at the end of each iteration I didn't take the full steps $\alpha^{primal}$ and $\alpha^{dual}$ but I reduced them by multiplying each step for $\gamma= 0.9995$ because while approaching the solution (or in general the boundary of the feasible set) may happen $x_k,s_k \to0$ too fast. This may lead to numeric cancellation, resulting in $X_k$ and $S_k$ singular matrices. In fact, without this fix, matlab used to give a warning. 
+When updating $x_k$, $\lambda_k$, $s_k$ at the end of each iteration I didn't take the full steps $\alpha^{primal}$ and $\alpha^{dual}$ but I reduced them by multiplying each step for $\gamma= 0.99995$ because while approaching the solution (or in general the boundary of the feasible set) may happen $x_k,s_k \to0$ too fast. This may lead to numeric cancellation, resulting in $X_k$ and $S_k$ ill conditioned or singular matrices. In fact, without this fix, matlab used to warn me about this. 
 \pagebreak
 \subsection{Starting configuration a}
 Results using LU factorization.\\
