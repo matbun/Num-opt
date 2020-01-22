@@ -53,7 +53,7 @@ S_k & 0 & X_k
 \end{equation*}
 \\
 Where $X_k=diag(x_k)$ and $S_k=diag(s_k)$.\\
-Interior point methods are variants of Newton method that guarantee that each iterate $(x_k, \lambda_k, s_k)$ satisfy the constraint $x_k, s_k\geq0$.
+Interior point methods are variants of Newton method that guarantee that each iterate $(x_k, \lambda_k, s_k)$ satisfy the constraint $x_k, s_k>0$.
 \pagebreak
 \section{Problem data}
 $A=(1, \dots 1)\in \Re^{1*n}$, \\
@@ -196,13 +196,13 @@ The matrix $AS^{-1}XA^T \in \Re^{mxm}$ is a real number, since in this case $m=1
 \pagebreak
 \section{Results}
 The reduction of the Jacobian was motivate by the unfeasibility of the problem when n gets very large (1M in this case), leading to a memory error.\\
-To solve the problem with a direct method suited for an indefinite non symmetric matrix I used the LU decomposition, which is slightly less time consuming than the Gaussian elimination and it doesn't need to be computed twice for each iteration (we have to solve two linear systems with the same coefficient matrix).\\\\
+To solve the problem with a direct method suited for an indefinite non symmetric matrix I used the LU decomposition, unless the Gaussian elimination it doesn't need to be computed twice for each iteration (we have to solve two linear systems with the same coefficient matrix).\\\\
 What improved the performances, indeed, was the chosen starting point. We know that it's not necessary for the starting point to exactly fulfill all the first order optimality conditions, but just $x, s > 0$.\\
 I tried 3 starting configurations:
 \begin{enumerate}
 	\item [a.]$x=ones(n,1)$, $s=ones(n,1)$, $\lambda = 1$.
 	\item [b.]$x=100*ones(n,1)$, $s=100*ones(n,1)$,
-	 $\lambda = 100$.
+	 $\lambda = 1$.
 	 \item [c.] A method showed on the Nocedal Wright book to choose a good starting configuration. On the book it's said that the complexity of this operation is similar to the complexity of one iteration of the method.
 \end{enumerate} 
 To compute the starting point:
@@ -214,7 +214,7 @@ To compute the starting point:
 	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
 \end{enumerate}
 For all the results reported below, in the stopping criterion I used $\epsilon=10^{-16}$.\\\\
-When updating $x_k$, $\lambda_k$, $s_k$ at the end of each iteration I didn't take the full steps $\alpha^{primal}$ and $\alpha^{dual}$ but I reduced them by multiplying each step for $\gamma= 0.99995$ because while approaching the solution (or in general the boundary of the feasible set) may happen $x_k,s_k \to0$ too fast. This may lead to numeric cancellation, resulting in $X_k$ and $S_k$ ill conditioned or singular matrices. In fact, without this fix, matlab used to warn me about this. 
+When updating $x_k$, $\lambda_k$, $s_k$ at the end of each iteration I didn't take the full steps $\alpha^{primal}$ and $\alpha^{dual}$ but I reduced them by multiplying each step for $\gamma= 0.99995$ because while approaching the solution (or in general the boundary of the feasible set) may happen $x_k,s_k \to0$ too fast. This may lead to numeric cancellation, resulting in $X_k$ and $S_k$ ill conditioned or singular matrices. In fact, without this fix, matlab used to warn me about the large conditioning number of these matrices. 
 \pagebreak
 \subsection{Starting configuration a}
 Results using LU factorization.\\
@@ -253,7 +253,14 @@ Results using reduction of the jacobian.
 \end{figure}
 \pagebreak
 \section{Comments}
-As we can see, the only difference between the two different approaches is the execution time. This is because the method is the same, I'm just using different ways of computing it...\\
-The worse is the starting point, the longer it takes to converge...\\\\
+As we can see, the only main difference between the two different approaches is the execution time. This is because the method is the same and I'm just using different ways to solve the linear systems. \\
+As said before, the LU factorization was unfeasible when $n=10^6$, leading to a memory error.\\\\
+As expected, the LU factorization approach was slower to solve the system since it had to store in memory new matrices and solve two subsystems and make a matrix-vector product for each linear system.\\\\
+Introducing the coefficient $\gamma$ has slightly increased the number of iterations but in turn has made this method more solid, avoiding working with $X$ and $S$ nearly singular or ill conditioned.\\\\
+The results show that the method is able to converge even if the starting point isn't feasible (but still satisfy the constraints $x,s > 0$).\\
+Another observation is that the worse is the starting point, the longer it takes to converge. In fact, there's been a substantial decrease in the number of iteration when taking as a starting point the one computed in the \textbf{configuration c}. \\
+On the other hand, there hasn't been much difference in the number of iterations in the other two configurations (\textbf{a,b}) even if there was a relative difference between $x_0^a, x_0^b$ and $s_0^a, s_0^b$ of 100 times. \\
+This suggest that it takes few iterations to get nearby to the solution, wherever the starting point is, but then, making smaller and smaller steps it takes more iterations to get to the solution.\\
+This assumption is supported by the theory, since the steplength depends on the magnitude of $x,s$, which are going to 0 as we reach the solution.\\\\
 You can find the code I used to solve this problem here: \url{https://github.com/matbun/Num-opt/tree/master/p1/code}.
 \end{document}

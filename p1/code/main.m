@@ -21,12 +21,12 @@ for n = [1e4]
         b = ones(m,1);
 
         %[x, lambda, s] = starting_point(A,b,c);
-        x = 100*ones(n,1);
-        s = 100*ones(n,1);
+        x = ones(n,1);
+        s = ones(n,1);
         lambda = 1;
         
         tic
-        [~, iter] = predictor_corrector_lu(A,b,c,x,lambda,s,maxiter,epsilon);
+        [~, iter] = predictor_corrector(A,b,c,x,lambda,s,maxiter,epsilon);
         
         elapsed_t(i,j) = toc;
         n_iter(i,j) = iter;
