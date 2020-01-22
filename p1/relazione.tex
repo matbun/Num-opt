@@ -64,7 +64,26 @@ After having built the sparse jacobian of F, using the command spy() it's possib
 \end{figure}
 
 Using the command [R,p] = chol(J) it's possible to notice, thanks to the value of p, that the matrix isn't positive definite. Hence I could not use: gradient method, conjugate gradient or Cholesky decomposition.\\
-Since this matrix isn't symmetric, I didn't use the LDL decomposition neither.\\\\
+Since this matrix isn't symmetric, I couldn't use the LDL decomposition neither.\\
+Hence I used two different strategies: LU decomposition and system reduction.
+\subsection{LU decomposition}
+As suggested in its documentation, Matlab has a specific implementation of the command lu() which is efficient for sparse matrices: [L,U,P,Q] = lu(A).\\
+This command makes the $PAQ = LU$ decomposition of a matrix, where $L,U$ are triangular matrices and $P,Q$ permutation matrices.\\
+A linear system can be solved with this factorization the following way:
+\begin{equation*}
+\begin{split}
+PA = LUQ^{-1}\\
+Ax = b \implies PAx = Pb\\
+LUQ^{-1}x = Pb
+\end{split}
+\end{equation*}
+\begin{enumerate}
+	\item $Lz = Pb \implies z$
+	\item $Uy = z \implies y$
+	\item $Q^{-1}x = y \implies x = Qy$
+\end{enumerate}
+The advantage of this method is that we have to factorize the jacobian of F only once per each iteration and we can use it to solve two linear systems where only the right hand vector has changed.
+\subsection{System reduction}
 Analyzing the structure of the block matrix, we can notice that it's possible to make some reductions. Rewriting the left hand part in a more compact way:
 \begin{equation*}
 \begin{pmatrix}
@@ -85,7 +104,28 @@ r_b \\[0.3em]
 r_c         
 \end{pmatrix}
 \end{equation*}
-Since $X$ is invertible ($x > 0$ is guarateed by the IPM), multiplying $-X^{-1}$:
+From the second equation is possible to to write: $\Delta s = r_b - A^T\Delta\lambda$.\\
+Since $X$ is invertible ($x > 0$ is guarateed by the IPM) it's possible to eliminate $I$ from the block matrix: $R_1 = R_1 -X^{-1}R_3$ ($R_i$ is the $i$-th row):
+\begin{equation*}
+\begin{pmatrix}
+A & 0 & 0 \\[0.3em]
+-X^{-1}S & A^T & 0 \\[0.3em]
+S & 0 & X           
+\end{pmatrix}
+\cdot 
+\begin{pmatrix}
+\Delta x \\[0.3em]
+\Delta \lambda \\[0.3em]
+\Delta s           
+\end{pmatrix}
+= 
+\begin{pmatrix}
+r_a \\[0.3em]
+r_b-X^{-1}r_c \\[0.3em]
+r_c         
+\end{pmatrix}
+\end{equation*}
+Now $\Delta s$ can be extracted from the system: $\Delta s = X^{-1}r_c-X^{-1}S\Delta x$, obtaining:
 \begin{equation*}
 	\begin{pmatrix}
 	A & 0\\
@@ -93,8 +133,8 @@ Since $X$ is invertible ($x > 0$ is guarateed by the IPM), multiplying $-X^{-1}$
 	\end{pmatrix}
 	\cdot
 	\begin{pmatrix}
-	\Delta x_k \\[0.3em]
-	\Delta \lambda_k \\[0.3em]
+	\Delta x \\[0.3em]
+	\Delta \lambda \\[0.3em]
 	\end{pmatrix}
 	=
 	\begin{pmatrix}
@@ -102,12 +142,31 @@ Since $X$ is invertible ($x > 0$ is guarateed by the IPM), multiplying $-X^{-1}$
 	r_b-X^{-1}r_c
 	\end{pmatrix}
 \end{equation*}
-$S$ is invertible for the same reason:
+Since $S$ is invertible ($x > 0$ is guarateed by the IPM) it's possible to eliminate $A$ from the block matrix: $R_1 = R_1 +AS^{-1}XR_2$ ($R_i$ is the $i$-th row):
+\begin{equation*}
+\begin{pmatrix}
+0 & AS^{-1}XA^T\\
+-X^{-1}S & A^T
+\end{pmatrix}
+\cdot
+\begin{pmatrix}
+\Delta x \\[0.3em]
+\Delta \lambda \\[0.3em]
+\end{pmatrix}
+=
+\begin{pmatrix}
+r_a + AS^{-1}X(r_b-X^{-1}r_c)\\
+r_b-X^{-1}r_c
+\end{pmatrix}
+\end{equation*}
+From which we can obtain:
 \begin{equation*}
 	\begin{split}
-	AS^{-1}XA^T\Delta\lambda&=r_a+AXS^{-1}r_b-AS^{-1}r_c\\
+	AS^{-1}XA^T\Delta\lambda&=r_a+AS^{-1}Xr_b-AS^{-1}r_c\\
 	\Delta s &= r_b-A^T\Delta \lambda\\
-	\Delta x &= S^{-1}r_c-XS^{-1}\Delta s\\
+	\Delta x &=-S^{-1}X(r_b-A^T\Delta \lambda - X^{-1}r_c)\\
+	&=-S^{-1}X(\Delta s - X^{-1}r_c)\\
+	&= S^{-1}r_c-S^{-1}X\Delta s
 	\end{split}
 \end{equation*}
 The matrix $AS^{-1}XA^T \in \Re^{mxm}$ is a real number, since in this case $m=1$. This makes the computation of the system trivial, avoiding the problem of working with singular or indefinite matrices.
@@ -120,8 +179,17 @@ I tried 3 starting configurations:
 	\item [a.]$x=ones(n,1)$, $s=ones(n,1)$, $\lambda = 1$.
 	\item [b.]$x=100*ones(n,1)$, $s=100*ones(n,1)$,
 	 $\lambda = 100$.
-	 \item [c.] a method showed on the Nocedal Wright book to choose a good starting configuration.
+	 \item [c.] A method showed on the Nocedal Wright book to choose a good starting configuration. On the book it's said that the complexity of this operation is similar to the complexity of one iteration of the method.
 \end{enumerate} 
+To compute the starting point:
+\begin{enumerate}
+	\item $\tilde{x} = A^T(AA^T)^{-1}b$, $\tilde{\lambda} = (AA^T)^{-1}Ac$, $\tilde{s} = c-A^T\tilde{\lambda}$
+	\item $\delta_x=max(-1.5min_i(\tilde{x_i}),0)$, $\delta_s=max(-1.5min_i(\tilde{s_i}),0)$
+	\item $\hat{x} = \tilde{x} + \delta_xe$, $\hat{s} = \tilde{s} + \delta_se$
+	\item $\hat{\delta_x}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{s}}$, $\hat{\delta_s}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{x}}$
+	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
+\end{enumerate}
+For all the results reported below, in the stopping criterion I used $\epsilon=10^{-16}$.
 \pagebreak
 \subsection{Starting configuration a}
 Results using LU factorization.\\
@@ -148,14 +216,6 @@ Results using reduction of the jacobian.
 \end{figure}
 \pagebreak
 \subsection{Starting configuration c}
-To compute the starting point:
-\begin{enumerate}
-	\item $\tilde{x} = A^T(AA^T)^{-1}b$, $\tilde{\lambda} = (AA^T)^{-1}Ac$, $\tilde{s} = c-A^Ttilde{\lambda}$
-	\item $\delta_x=max(-1.5min\tilde{x_i},0)$, $\delta_s=max(-1.5min\tilde{s_i},0)$
-	\item $\hat{x} = \tilde{x} + \delta_xe$, $\hat{s} = \tilde{s} + \delta_se$
-	\item $\hat{\delta_x}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{s}}$, $\hat{\delta_s}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{x}}$
-	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
-\end{enumerate}
 Results using LU factorization.\\
 \begin{figure}[h]
 	\includegraphics[width=12cm]{table4.png}
@@ -163,7 +223,7 @@ Results using LU factorization.\\
 \end{figure}\\
 Results using reduction of the jacobian.
 \begin{figure}[h]
-	\includegraphics[width=10cm]{table1.png}
+	\includegraphics[width=12cm]{table1.png}
 	\caption{Starting point as suggested on the book.}
 \end{figure}
 \pagebreak
