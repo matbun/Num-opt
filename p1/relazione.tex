@@ -2,6 +2,9 @@
 \usepackage{amsmath}
 \usepackage{graphicx}
 \usepackage{float}
+\usepackage{mwe}    % loads »blindtext« and »graphicx«
+\usepackage{subfig}
+\usepackage{url}
 %opening
 \title{Assignment - Constrained optimization\\Interior Point Method applied to linear programming
 	problems}
@@ -24,7 +27,7 @@ The linear system to solve is:
 	=0
 \end{equation*}
 
-According to Newton method for nonlinear system of equation, the system can locally linearized and solved. To linearize this system is necessary to compute the Jacobian of $F$ at each iteration and solve the linear system:
+According to Newton method for nonlinear system of equation, the system can be locally linearized and solved. To linearize this system is necessary to compute the Jacobian of $F$ at each iteration and solve the linear system:
 \begin{equation*}
 	F'(x_k,\lambda_k, s_k) \cdot 
 	\begin{pmatrix}
@@ -50,7 +53,7 @@ S_k & 0 & X_k
 \end{equation*}
 \\
 Where $X_k=diag(x_k)$ and $S_k=diag(s_k)$.\\
-Interior point methods are variants of Newton method that guarantee that each iterate $(x_k, \lambda_k, s_k)$ satisfy the constraint $x, s\geq0$.
+Interior point methods are variants of Newton method that guarantee that each iterate $(x_k, \lambda_k, s_k)$ satisfy the constraint $x_k, s_k\geq0$.
 \pagebreak
 \section{Problem data}
 $A=(1, \dots 1)\in \Re^{1*n}$, \\
@@ -66,6 +69,7 @@ After having built the sparse jacobian of F, using the command spy() it's possib
 Using the command [R,p] = chol(J) it's possible to notice, thanks to the value of p, that the matrix isn't positive definite. Hence I could not use: gradient method, conjugate gradient or Cholesky decomposition.\\
 Since this matrix isn't symmetric, I couldn't use the LDL decomposition neither.\\
 Hence I used two different strategies: LU decomposition and system reduction.
+
 \subsection{LU decomposition}
 As suggested in its documentation, Matlab has a specific implementation of the command lu() which is efficient for sparse matrices: [L,U,P,Q] = lu(A).\\
 This command makes the $PAQ = LU$ decomposition of a matrix, where $L,U$ are triangular matrices and $P,Q$ permutation matrices.\\
@@ -82,7 +86,26 @@ LUQ^{-1}x = Pb
 	\item $Uy = z \implies y$
 	\item $Q^{-1}x = y \implies x = Qy$
 \end{enumerate}
-The advantage of this method is that we have to factorize the jacobian of F only once per each iteration and we can use it to solve two linear systems where only the right hand vector has changed.
+The advantage of this method is that we have to factorize the jacobian of F only once per each iteration and we can use it to solve two linear systems where only the right hand vector has changed.\\\\
+Matlab lu() result:
+\begin{figure}[!ht]
+	\subfloat[L matrix\label{subfig-1:dummy}]{%
+		\includegraphics[width=0.5\textwidth]{code/L.jpg}
+	}
+	\hfill
+	\subfloat[U matrix\label{subfig-2:dummy}]{%
+		\includegraphics[width=0.5\textwidth]{code/U.jpg}
+	}\\
+	\subfloat[P matrix\label{subfig-3:dummy}]{%
+		\includegraphics[width=0.5\textwidth]{code/P.jpg}
+	}
+	\hfill
+	\subfloat[Q matrix\label{subfig-4:dummy}]{%
+		\includegraphics[width=0.5\textwidth]{code/Q.jpg}
+	}
+	\caption{As we can see, that matlab command is able to preserve (if possible) the sparse structure of the matrices.}
+	\label{fig:dummy}
+\end{figure}
 \subsection{System reduction}
 Analyzing the structure of the block matrix, we can notice that it's possible to make some reductions. Rewriting the left hand part in a more compact way:
 \begin{equation*}
@@ -142,7 +165,7 @@ Now $\Delta s$ can be extracted from the system: $\Delta s = X^{-1}r_c-X^{-1}S\D
 	r_b-X^{-1}r_c
 	\end{pmatrix}
 \end{equation*}
-Since $S$ is invertible ($x > 0$ is guarateed by the IPM) it's possible to eliminate $A$ from the block matrix: $R_1 = R_1 +AS^{-1}XR_2$ ($R_i$ is the $i$-th row):
+Since $S$ is invertible ($s > 0$ is guarateed by the IPM) it's possible to eliminate $A$ from the block matrix: $R_1 = R_1 +AS^{-1}XR_2$ ($R_i$ is the $i$-th row):
 \begin{equation*}
 \begin{pmatrix}
 0 & AS^{-1}XA^T\\
@@ -169,7 +192,8 @@ From which we can obtain:
 	&= S^{-1}r_c-S^{-1}X\Delta s
 	\end{split}
 \end{equation*}
-The matrix $AS^{-1}XA^T \in \Re^{mxm}$ is a real number, since in this case $m=1$. This makes the computation of the system trivial, avoiding the problem of working with singular or indefinite matrices.
+The matrix $AS^{-1}XA^T \in \Re^{mxm}$ is a real number, since in this case $m=1$. This makes the computation of the system trivial.
+\pagebreak
 \section{Results}
 The reduction of the Jacobian was motivate by the unfeasibility of the problem when n gets very large (1M in this case), leading to a memory error.\\
 To solve the problem with a direct method suited for an indefinite non symmetric matrix I used the LU decomposition, which is slightly less time consuming than the Gaussian elimination and it doesn't need to be computed twice for each iteration (we have to solve two linear systems with the same coefficient matrix).\\\\
@@ -189,7 +213,8 @@ To compute the starting point:
 	\item $\hat{\delta_x}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{s}}$, $\hat{\delta_s}=\frac{\hat{x}^T\hat{s}}{2e^t\hat{x}}$
 	\item $x^0 = \hat{x} + \hat{\delta_x}e$, $\lambda^0=\tilde{\lambda}$, $s^0 = \hat{s} + \hat{\delta_s}e$
 \end{enumerate}
-For all the results reported below, in the stopping criterion I used $\epsilon=10^{-16}$.
+For all the results reported below, in the stopping criterion I used $\epsilon=10^{-16}$.\\\\
+When updating $x_k$, $\lambda_k$, $s_k$ at the end of each iteration I didn't take the full steps $\alpha^{primal}$ and $\alpha^{dual}$ but I reduced them by multiplying each step for $\gamma= 0.9995$ because while approaching the solution (or in general the boundary of the feasible set) may happen $x_k,s_k \to0$ too fast. This may lead to numeric cancellation, resulting in $X_k$ and $S_k$ singular matrices. In fact, without this fix, matlab used to give a warning. 
 \pagebreak
 \subsection{Starting configuration a}
 Results using LU factorization.\\
@@ -229,10 +254,6 @@ Results using reduction of the jacobian.
 \pagebreak
 \section{Comments}
 As we can see, the only difference between the two different approaches is the execution time. This is because the method is the same, I'm just using different ways of computing it...\\
-The worse is the starting point, the longer it takes to converge...\\
-Code?\\
-Quale epsilon (tolelranza) ho usato?\\
-Complessità dello starting point dato dal libro\\
-Aggiungi foto L, U già presenti nella cartella code. Eventualmente rifai i calcoli per misurare i tempi.\\
-La fattorizzazione che ho usato è A = LU ([L,U] = lu(A)) però L in queto modo non è una matrice triangolare. Devo usare PA = LU ([L,U,P] = lu(A)) che per matrici sparse diventa PAQ = LU ([L,U,P,Q] = lu(A)).\\
+The worse is the starting point, the longer it takes to converge...\\\\
+You can find the code I used to solve this problem here: \url{https://github.com/matbun/Num-opt/tree/master/p1/code}.
 \end{document}

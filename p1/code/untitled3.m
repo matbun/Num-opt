@@ -26,8 +26,8 @@ AA(m+n+1:m+2*n, m+n+1:m+2*n) = X;
 [L,U,P,Q] = lu(AA);
 
 figure
-spy(L)
+spy(P)
 figure
-spy(U)
+spy(Q)
 
 
